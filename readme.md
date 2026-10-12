@@ -280,7 +280,9 @@ python setup.py        # installs deps for YOUR OS + the browser automation engi
 python main.py
 ```
 
-`setup.py` only ever installs what your operating system needs — the Windows-only libraries are skipped automatically on macOS and Linux, and vice-versa. It also checks your Python version up front, so a wrong interpreter fails with a sentence instead of a wall of pip output. Prefer to do it by hand? `pip install -r requirements.txt` works too.
+`setup.py` only ever installs what your operating system needs — the Windows-only libraries are skipped automatically on macOS and Linux, and vice-versa. It also checks your Python version up front, so a wrong interpreter fails with a sentence instead of a wall of pip output.
+
+Where the packages go is autodetected: if this Python already accepts `pip install` (Windows, conda, an activated venv), they go there. If the interpreter is marked externally managed — Debian, Ubuntu, Fedora, Homebrew (PEP 668) — setup creates a project-local `.venv` and `python main.py` hops into it on its own. Prefer to do it by hand? `pip install -r requirements.txt` works too, or `python3 -m venv .venv` first on a locked distro Python.
 
 > ⚠️ **Installation Note:** If you hit a `ModuleNotFoundError` for an OS-specific package, install it with `pip install <module_name>`. The optional **wake word** engine is *not* installed here — grab it in one click from **⚙ → WAKE WORD** inside the app.
 
@@ -307,7 +309,7 @@ python main.py
 Mark LV/
 ├── main.py                   # Core loop — Gemini Live session, audio I/O, viseme extraction, tool dispatch
 ├── ui.py                     # PyQt6 HUD — avatar canvas, waveform, log panel, settings drawer, camera feed
-├── setup.py                  # OS-aware installer (skips wrong-OS dependencies, checks your Python)
+├── setup.py                  # OS-aware installer (skips wrong-OS deps, venv only if PEP 668)
 ├── .gitignore                # Keeps your API key, TLS key and memories out of the repository
 ├── plugins/
 │   └── _template.py          # Copy this to write a new skill — one file, drop in, done

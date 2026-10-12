@@ -32,6 +32,38 @@ for _stream in ("stdout", "stderr"):
     except Exception:
         pass          # pythonw / redirected pipes / anything exotic — never fatal
 
+# ── Follow setup.py's install target so `python main.py` always works ────────
+# If this interpreter already has the app's packages, stay. If it does not
+# and setup.py created a project `.venv` (PEP 668 / externally-managed
+# Python), hop into that venv before the third-party imports below.
+import os as _os
+
+def _reexec_into_venv() -> None:
+    in_venv = (
+        getattr(_sys, "base_prefix", _sys.prefix) != _sys.prefix
+        or bool(_os.environ.get("VIRTUAL_ENV"))
+    )
+    if in_venv:
+        return
+    try:
+        import importlib.util as _ilu
+        if _ilu.find_spec("sounddevice") and _ilu.find_spec("PyQt6"):
+            return
+    except Exception:
+        pass
+    from pathlib import Path as _Path
+    here = _Path(__file__).resolve().parent
+    venv_py = here / (".venv/Scripts/python.exe" if _os.name == "nt" else ".venv/bin/python")
+    if not venv_py.exists():
+        return
+    argv = [str(venv_py), str(_Path(__file__).resolve()), *_sys.argv[1:]]
+    try:
+        _os.execv(argv[0], argv)
+    except OSError:
+        raise SystemExit(_subprocess.run(argv).returncode)
+
+_reexec_into_venv()
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 import asyncio
